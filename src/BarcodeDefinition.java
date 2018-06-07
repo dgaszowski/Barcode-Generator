@@ -1,28 +1,15 @@
+import java.util.TreeMap;
+import java.util.ArrayList;
 
-public enum BarcodeDefinition {
-	NAME("name", false),
-	SHORT("shortname", false),
-	LENGTH("length", true),
-	CHECKSUM("checksum", false),
-	LEFT_SIDE_PARITY("left_side_parity", false),
-	ARTIFACTS("artifacts", false),
-	ALPHABET("alphabet", true),
-	SEQUENCE("sequence", true);
+public class BarcodeDefinition {
+	public String name;
+	public String shortname;
+	public int length;
+	public boolean has_checksum;
+	public String left_side_parity;
+	public int modules_count;
+	public String[] artifacts;
 	
-	private String fieldName;
-	private boolean required;
-	
-	BarcodeDefinition(String fieldName, boolean required) {
-		this.fieldName = fieldName;
-		this.required = required;
-	}
-	
-	public String getFieldName() {
-		return fieldName;
-	}
-	
-	public boolean isRequired() {
-		return required;
-	}
-	
+	TreeMap<String, ArrayList<Boolean>> alphabet;
+	ArrayList<TreeMap<String, Integer>> sequence;
 }

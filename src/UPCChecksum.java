@@ -17,6 +17,6 @@ public final class UPCChecksum implements BarcodeChecksum{
 		
 		if (M != 0) M = 10 - M;
 		
-		return M;
+		return M; 
 	}
 }

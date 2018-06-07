@@ -5,110 +5,43 @@ import java.util.TreeMap;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import com.google.gson.Gson;
+
 public abstract class AbstractBarcode implements Barcode{
 	
-	protected JSONObject barcode; 
-	private JSONObject definition;
-	
-	private String name;
-	private String shortName;
-	private int length;
-	private boolean hasChecksum;
-	private LeftSideParity leftSideParity;
-	private HashSet<String> artifacts;
-	private TreeMap<String, ArrayList<Boolean>> alphabet;
-	private TreeMap<String, ArrayList<Boolean>> sequence;
-	
-	private void throwMissingField(String fieldName) {
-		throw new IllegalArgumentException( 
-				String.format(
-						"Field '%s' is required in barcode definition. Please refine your JSON definition file.",
-						fieldName
-				)
-		);
+	private boolean validateMessage(String message) {
+		if (message.length() != this.length) return false;
+		
+		for (int i = 0; i < message.length(); i++)
+			if (!this.alphabet.keySet().contains(String.format("%c", message.charAt(i))))
+					return false;
+			
+		return true;
 	}
 	
 	AbstractBarcode(JSONObject definition) {
-		if (definition == null)
+		BarcodeDefinition barcodeDefinition = new BarcodeDefinition();
+		
+	}
+	
+	@Override
+	public JSONObject barcode(String message) {
+		if (!validateMessage(message))
 			throw new IllegalArgumentException(
-					"JSON definition object of UPC-A cannot be null."
-			);
-		
-		this.definition = definition;
-		this.barcode = new JSONObject();
-		
-		// Parse the definition object.
-		
-		if (definition.has(BarcodeDefinition.NAME.getFieldName()))		
-			this.name = definition.getString(BarcodeDefinition.NAME.getFieldName());
-		
-		if (definition.has(BarcodeDefinition.SHORT.getFieldName()))
-			this.shortName = definition.getString(BarcodeDefinition.SHORT.getFieldName());
-		
-		if (!definition.has(BarcodeDefinition.CHECKSUM.getFieldName()))
-			this.hasChecksum = true;
-		else
-			this.hasChecksum = definition.getBoolean(BarcodeDefinition.CHECKSUM.getFieldName());
-		
-		if (!definition.has(BarcodeDefinition.LENGTH.getFieldName()))
-			throwMissingField(BarcodeDefinition.LENGTH.getFieldName());
-		else
-			this.length = definition.getInt(BarcodeDefinition.LENGTH.getFieldName());
-		
-		if (!definition.has(BarcodeDefinition.LEFT_SIDE_PARITY.getFieldName()))
-			this.leftSideParity = LeftSideParity.ODD;
-		else {	
-			
-			if (definition.getString("left_side_parity").toUpperCase().equals("ODD"))
-				this.leftSideParity = LeftSideParity.ODD;
-			else
-				this.leftSideParity = LeftSideParity.EVEN;
-		}
-		
-		// Get names of artifacts
-		if (definition.has(BarcodeDefinition.ARTIFACTS.getFieldName())
-				&& definition.get(BarcodeDefinition.ARTIFACTS.getFieldName()) instanceof JSONArray) {
-			
-			JSONArray artifacts = definition.getJSONArray(BarcodeDefinition.ARTIFACTS.getFieldName());
-			for (int i = 0; i < artifacts.length(); i++) 
-				this.artifacts.add(artifacts.getString(i));
-		}
-		
-		// Parse the definition of alphabet
-		if (!definition.has(BarcodeDefinition.ALPHABET.getFieldName()))
-			
-			throwMissingField(BarcodeDefinition.ALPHABET.getFieldName());
-		
-		else {
-			JSONObject alpha = definition.getJSONObject(BarcodeDefinition.ALPHABET.getFieldName());
-			while (alpha.keys().hasNext()) {
-				String key = alpha.keys().next();
-				JSONArray letter = null;
-				if (alpha.get(key) instanceof JSONArray) {
-					
-					letter = alpha.getJSONArray(key);
-					ArrayList<Boolean> modules = new ArrayList<>();
-					
-					for (int i = 0; i < letter.length(); i++)
-						modules.add(letter.getBoolean(i));
-					
-					this.alphabet.put(key, modules);
-				}
-			}
-		}
-		
-	}
-	 
-	public AbstractBarcode(JSONObject definition, String message) {
-		this(definition);
-		
+					String.format("Invalid message format: '%s'.", message)
+					);
+						
+		return null;
 	}
 	
 	@Override
-	public abstract JSONObject barcode();
+	public abstract ArrayList<JSONObject> barcode(Iterable<String> messages);
 	
 	@Override
-	public abstract int getChecksum();
+	public abstract int getChecksum(String message);
+	
+	@Override
+	public abstract ArrayList<Integer> getChecksum(Iterable<String> messages);
 	
 	public String getName() {
 		return name;
